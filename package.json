@@ -10,7 +10,9 @@
   "author": "Eduardo Uribe <eduardogoz91@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.2"
+    "@hapi/boom": "^9.1.4",
+    "express": "^4.17.2",
+    "pug": "^3.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
