@@ -8,7 +8,7 @@ function logErrors (err, req, res, next) {
 function boomErrorHandler (err, req, res, next) {
   if (err.isBoom) {
     const { output } = err
-    res.statusCode(output.statusCode).send(output.payload)
+    res.status(output.statusCode).send(output.payload)
   }
   next(err)
 }

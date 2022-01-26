@@ -1,46 +1,19 @@
 const express = require('express')
 const router = express.Router()
+const TaskService = require('../services/task.service')
+const {
+  taskIdSchema,
+  createTaskSchema,
+  updateTaskSchema
+} = require('../utils/schemas/task.schema')
+const validationHandler = require('../middlewares/validationHandler')
 
-const tasks = [
-  {
-    userId: 1,
-    id: 1,
-    title: 'delectus aut autem',
-    completed: false,
-    listId: 1
-  },
-  {
-    userId: 1,
-    id: 2,
-    title: 'quis ut nam facilis et officia qui',
-    completed: false,
-    listId: 2
-  },
-  {
-    userId: 1,
-    id: 3,
-    title: 'fugiat veniam minus',
-    completed: false,
-    listId: 2
-  },
-  {
-    userId: 1,
-    id: 4,
-    title: 'et porro tempora',
-    completed: true,
-    listId: 2
-  },
-  {
-    userId: 1,
-    id: 5,
-    title: 'laboriosam mollitia et enim quasi adipisci quia provident illum',
-    completed: false,
-    listId: 1
-  }
-]
+const taskService = new TaskService()
 
 // List all tasks
 router.get('/', (req, res) => {
+  const tasks = taskService.getTasks()
+
   const response = {
     message: 'tasks listed',
     data: tasks
@@ -49,77 +22,84 @@ router.get('/', (req, res) => {
 })
 
 // List an  specific task
-router.get('/:id', (req, res) => {
-  const { id } = req.params
-  const task = tasks.find(task => task.id === parseInt(id))
+router.get(
+  '/:taskId',
+  validationHandler({ taskId: taskIdSchema }, 'params'),
+  (req, res) => {
+    const { taskId } = req.params
+    const task = taskService.getTask({ taskId })
 
-  if (task) {
-    const response = {
-      message: 'task listed',
-      data: task
+    if (task) {
+      const response = {
+        message: 'task listed',
+        data: task
+      }
+      res.status(200).json(response)
+    } else {
+      const response = {
+        message: 'task not found'
+      }
+      res.status(404).json(response)
     }
-    res.status(200).json(response)
-  } else {
-    const response = {
-      message: 'task not found'
-    }
-    res.status(404).json(response)
   }
-})
+)
 
 // Create a new task
-router.post('/', (req, res) => {
+router.post('/', validationHandler(createTaskSchema), (req, res) => {
   const task = req.body
-  tasks.push(task)
+  const newTask = taskService.createTask({ task })
+
   res.status(201).json({
     message: 'task created',
-    data: task
+    data: newTask
   })
 })
 
 // Update a task
-router.patch('/:id', (req, res) => {
-  const { id } = req.params
-  const newTask = req.body
-  const taskIndex = tasks.findIndex(task => task.id === parseInt(id))
+router.patch(
+  '/:taskId',
+  validationHandler({ taskId: taskIdSchema }, 'params'),
+  validationHandler(updateTaskSchema),
+  (req, res) => {
+    const { taskId } = req.params
+    const { body: task } = req
+    const updatedTask = taskService.updateTask({ taskId, task })
 
-  if (tasks[taskIndex]) {
+    if (updatedTask) {
+      const response = {
+        message: 'task updated',
+        data: updatedTask
+      }
 
-    tasks[taskIndex] = {
-      ...tasks[taskIndex],
-      ...newTask
+      res.status(200).json(response)
+    } else {
+      const response = {
+        message: 'task not found'
+      }
+      res.status(404).json(response)
     }
-
-    const response = {
-      message: 'task updated',
-      data: tasks[taskIndex]
-    }
-    res.status(200).json(response)
-  } else {
-    const response = {
-      message: 'task not found'
-    }
-    res.status(404).json(response)
   }
-})
+)
 
 // Delete a task
-router.delete('/:id', (req, res) => {
-  const { id } = req.params
-  const taskIndex = tasks.findIndex(task => task.id === parseInt(id))
+router.delete(
+  '/:taskId',
+  validationHandler({ taskId: taskIdSchema }, 'params'),
+  (req, res) => {
+    const { taskId } = req.params
+    const deletedTask = taskService.deleteTask({ taskId })
 
-  if (tasks[taskIndex]) {
-    tasks.splice(taskIndex, 1)
-    res.status(200).json({
-      message: 'task deleted'
-    })
-  }else {
-    const response = {
-      message: 'task not found'
+    if (deletedTask) {
+      res.status(200).json({
+        message: 'task deleted'
+      })
+    } else {
+      const response = {
+        message: 'task not found'
+      }
+      res.status(404).json(response)
     }
-    res.status(404).json(response)
   }
-
-})
+)
 
 module.exports = router
